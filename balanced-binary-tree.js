@@ -1,14 +1,295 @@
-class node {
-  constructor(data = null, left = null, right = null) {
-    this.data = data;
-    this.left = left;
-    this.right = right;
+const NodeFactory = (data) => {
+  data = data;
+  left = right = null;
+  return { data, left, right };
+};
+
+const TreeFactory = (arr) => {
+  // Helper functions for sorting array & removing duplicates
+  function compareNumbers(a, b) {
+    return a - b;
   }
-}
+
+  function removeDups(arr) {
+    let seen = {};
+    let result = [];
+    let j = 0;
+    for (let i = 0; i < arr.length; i++) {
+      let item = arr[i];
+      if (seen[item] !== 1) {
+        seen[item] = 1;
+        result[j++] = item;
+      }
+    }
+    return result;
+  }
+
+  // Sorts input array & remove duplicates
+  let sortedArr = arr.sort(compareNumbers);
+  let reducedArr = removeDups(sortedArr);
+
+  // Builds balanced BST
+  const buildTree = (arr, start, end) => {
+    if (start > end) return null;
+
+    let mid = parseInt((start + end) / 2);
+    let node = NodeFactory(arr[mid]);
+
+    node.left = buildTree(arr, start, mid - 1);
+    node.right = buildTree(arr, mid + 1, end);
+
+    return node;
+  };
+
+  let root = buildTree(reducedArr, 0, reducedArr.length - 1);
+
+  // Inserts node of specific value into BST
+  const insertNode = (root, value) => {
+    let node = NodeFactory(value);
+    if (!root) {
+      root = node;
+      return;
+    }
+    let prev = null;
+    let current = root;
+    while (current) {
+      if (current.data > value) {
+        prev = current;
+        current = current.left;
+      } else if (current.data < value) {
+        prev = current;
+        current = current.right;
+      }
+    }
+    if (prev.data > value) {
+      prev.left = node;
+    } else {
+      prev.right = node;
+    }
+  };
+
+  // Deletes node of specific value from BST
+  const deleteNode = (root, value) => {
+    if (root == null) return root;
+
+    if (value < root.data) {
+      root.left = deleteNode(root.left, value);
+    } else if (value > root.data) {
+      root.right = deleteNode(root.right, value);
+    } else {
+      if (root.left == null) {
+        return root.right;
+      } else if (root.right == null) {
+        return root.left;
+      }
+
+      root.data = minValue(root.right);
+      root.right = deleteNode(root.right, root.data);
+    }
+    return root;
+  };
+
+  // Helper function for deleteNode - returns smallest value in right branch
+  function minValue(root) {
+    let minVal = root.data;
+    while (root.left != null) {
+      minVal = root.left.data;
+      root = root.left;
+    }
+    return minVal;
+  }
+
+  // Finds & returns node of specified value
+  const find = (root, value) => {
+    if (root == null) return root;
+
+    if (value < root.data) {
+      return find(root.left, value);
+    } else if (value > root.data) {
+      return find(root.right, value);
+    } else {
+      return root;
+    }
+  };
+
+  // Traverses BST in breadth-first level order &
+  // passes each node into specified callback f(x)
+  // (otherwise returns array of visited nodes)
+  const levelOrder = (root, func) => {
+    let result = [];
+    let q = [root];
+    let node;
+
+    while (q.length >= 1) {
+      for (let i = 0; i < q.length; i++) {
+        node = q.shift();
+        if (node) {
+          if (func) {
+            func(node);
+          } else {
+            result.push(node.data);
+          }
+          q.push(node.left);
+          q.push(node.right);
+        }
+      }
+    }
+    if (!func) {
+      return result;
+    }
+  };
+
+  // Traverses BST in depth-first preorder traversal &
+  // passes each node into specified callback f(x)
+  // (otherwise returns array of visited nodes)
+  const preOrder = (root, func) => {
+    if (root) {
+      if (func) {
+        func(root);
+        if (root.left) preOrder(root.left, func);
+        if (root.right) preOrder(root.right, func);
+      } else {
+        if (root == null) return;
+
+        let result = [root.data]
+          .concat(preOrder(root.left))
+          .concat(preOrder(root.right));
+        result = result.filter(function (element) {
+          return element !== undefined;
+        });
+
+        return result;
+      }
+    }
+  };
+
+  // Traverses BST in depth-first in order traversal &
+  // passes each node into specified callback f(x)
+  // (otherwise returns array of visited nodes)
+  const inOrder = (root, func) => {
+    if (root) {
+      if (func) {
+        if (root.left) inOrder(root.left, func);
+        func(root);
+        if (root.right) inOrder(root.right, func);
+      } else {
+        if (root == null) return;
+
+        let result = []
+          .concat(inOrder(root.left))
+          .concat(root.data)
+          .concat(inOrder(root.right));
+        result = result.filter(function (element) {
+          return element !== undefined;
+        });
+
+        return result;
+      }
+    }
+  };
+
+  // Traverses BST in depth-first postorder traversal &
+  // passes each node into specified callback f(x)
+  // (otherwise returns array of visited nodes)
+  const postOrder = (root, func) => {
+    if (root) {
+      if (func) {
+        if (root.left) postOrder(root.left, func);
+        if (root.right) postOrder(root.right, func);
+        func(root);
+      } else {
+        if (root == null) return;
+
+        let result = []
+          .concat(postOrder(root.left))
+          .concat(postOrder(root.right))
+          .concat(root.data);
+        result = result.filter(function (element) {
+          return element !== undefined;
+        });
+        return result;
+      }
+    }
+  };
+
+  // Returns height of specified node
+  const height = (root) => {
+    if (root == null) return -1;
+
+    let leftHt = height(root.left);
+    let rightHt = height(root.right);
+
+    return Math.max(leftHt, rightHt) + 1;
+  };
+
+  // Returns depth of specified node
+  const depth = (root, node) => {
+    if (root == null) return;
+
+    let nodeDepth = 0;
+    let current = root;
+    while (current) {
+      if (current.data > node.data) {
+        nodeDepth++;
+        current = current.left;
+      } else if (current.data < node.data) {
+        nodeDepth++;
+        current = current.right;
+      } else if (current.data == node.data) {
+        return nodeDepth;
+      } else {
+        return 'Node could not be found.';
+      }
+    }
+  };
+
+  // Returns true if BST is balanced,
+  // otherwise returns false
+  const isBalanced = (root) => {
+    if (root == null) return -1;
+
+    let leftHt = height(root.left);
+    let rightHt = height(root.right);
+
+    leftHt = leftHt + 1;
+    rightHt = rightHt + 1;
+
+    let diff = leftHt - rightHt;
+
+    if (diff > 1 || diff < -1) {
+      return false;
+    } else {
+      isBalanced(root.left);
+      isBalanced(root.right);
+    }
+    return true;
+  };
+
+  // Rebalances BST
+  const rebalance = (root) => {
+    let arr = inOrder(root);
+    return TreeFactory(arr);
+  };
+
+  return {
+    root,
+    buildTree,
+    insertNode,
+    deleteNode,
+    find,
+    levelOrder,
+    preOrder,
+    inOrder,
+    postOrder,
+    height,
+    depth,
+    isBalanced,
+    rebalance,
+  };
+};
+
+// Print binary search tree to console
 const prettyPrint = (node, prefix = '', isLeft = true) => {
-  if (node === null) {
-    return;
-  }
   if (node.right !== null) {
     prettyPrint(node.right, `${prefix}${isLeft ? '│   ' : '    '}`, false);
   }
@@ -18,155 +299,56 @@ const prettyPrint = (node, prefix = '', isLeft = true) => {
   }
 };
 
-function minValue(root) {
-  let min = root.data;
-  while (root != null) {
-    min = root.data;
-    root = root.left;
-  }
-  prettyPrint(this.root);
-  return min;
-}
-class tree {
-  constructor(inputArray) {
-    this.root = this.buildTree(inputArray, 0, inputArray.length - 1);
-    prettyPrint(this.root);
-  }
+// Test script
+// Step 1
+console.log('1) Create a binary search tree from an array of random numbers');
+let randomArr = Array.from({ length: 12 }, () =>
+  Math.floor(Math.random() * 12)
+);
+console.log(`Random array: ${randomArr}`);
+let newTree = TreeFactory(randomArr);
+console.log(prettyPrint(newTree.root));
 
-  buildTree(inputArray, start, end) {
-    if (start > end) return null;
-    let mid = parseInt((start + end) / 2);
-    let root = new node(inputArray[mid]);
-    root.left = this.buildTree(inputArray, start, mid - 1);
-    root.right = this.buildTree(inputArray, mid + 1, end);
-    return root;
-  }
+//Step 2
+console.log('2) Confirm that the tree is balanced by calling isBalanced');
+console.log(
+  `newTree.isBalanced(newTree.root) = ${newTree.isBalanced(newTree.root)}`
+);
 
-  insert(value, root = this.root) {
-    if (root == null) {
-      return (root = new node(value));
-    }
+// Step 3
+console.log('3) Print out all elements in level, pre, post, and in order');
+console.log(`Level: ${newTree.levelOrder(newTree.root)}`);
+console.log(`Preorder: ${newTree.preOrder(newTree.root)}`);
+console.log(`Postorder: ${newTree.postOrder(newTree.root)}`);
+console.log(`In order: ${newTree.inOrder(newTree.root)}`);
 
-    if (root.data < value) {
-      root.right = this.insert(value, root.right);
-    } else {
-      root.left = this.insert(value, root.left);
-    }
-    prettyPrint(this.root);
-    return root;
-  }
-  delete(value, root = this.root) {
-    if (root == null) {
-      return root;
-    }
+// Step 4
+console.log('4) Unbalance the tree by adding several numbers > 100');
+newTree.insertNode(newTree.root, 200);
+newTree.insertNode(newTree.root, 300);
+newTree.insertNode(newTree.root, 400);
+prettyPrint(newTree.root);
 
-    if (root.data > value) {
-      root.left = this.delete(value, root.left);
-    } else if (root.data < value) {
-      root.right = this.delete(value, root.right);
-    } else {
-      if (root.left == null) {
-        return root.right;
-      } else if (root.right == null) {
-        return root.left;
-      }
-      root.data = minValue(root);
-      root.right = this.delete(root.right, root.data);
-    }
-    prettyPrint(this.root);
-    return root;
-  }
+// Step 5
+console.log('5) Confirm that the tree is unbalanced by calling isBalanced');
+console.log(
+  `newTree.isBalanced(newTree.root) = ${newTree.isBalanced(newTree.root)}`
+);
 
-  find(value, root = this.root) {
-    if (root == null) return false;
+// Step 6
+console.log('6) Balance the tree by calling rebalance');
+newTree = newTree.rebalance(newTree.root);
+prettyPrint(newTree.root);
 
-    if (root.data == value) return root;
+// Step 7
+console.log('7) Confirm that the tree is balanced by calling isBalanced');
+console.log(
+  `newTree.isBalanced(newTree.root) = ${newTree.isBalanced(newTree.root)}`
+);
 
-    if (root.data > value) {
-      return this.find(value, root.left);
-    } else if (root.data < value) {
-      return this.find(value, root.right);
-    }
-    prettyPrint(this.root);
-    return root;
-  }
-  levelOrder(root = this.root) {
-    const queue = [];
-    const result = [];
-
-    if (root == null) return;
-
-    queue.push(root);
-
-    while (queue.length > 0) {
-      let current = queue.shift(root);
-      result.push(current.data);
-
-      if (current.left !== null) queue.push(current.left);
-      if (current.right !== null) queue.push(current.right);
-    }
-    console.log('Lets level Order this tree...', result);
-    return result;
-  }
-
-  inOrder(root = this.root) {
-    if (root == null) return;
-
-    if (root.left !== null) {
-      this.inOrder(root.left);
-    }
-
-    if (root.data !== undefined) {
-      this.inOrderData.push(root.data);
-    }
-
-    if (root.right !== null) {
-      this.inOrder(root.right);
-    }
-    console.log('Lets print this tree inOrder...', `${this.inOrderData}`);
-  }
-
-  preOrder(root = this.root) {
-    if (root == null) return;
-
-    if (root.data !== undefined) {
-      this.preOrderData.push(root.data);
-    }
-
-    if (root.left !== null) {
-      this.preOrder(root.left);
-    }
-
-    if (root.right !== null) {
-      this.preOrder(root.right);
-    }
-    console.log('Lets print this tree preOrder...', `${this.preOrderData}`);
-  }
-
-  postOrder(root = this.root) {
-    if (root == null) return;
-
-    if (root.left !== null) {
-      this.postOrder(root.left);
-    }
-
-    if (root.right !== null) {
-      this.postOrder(root.right);
-    }
-
-    if (root.data !== undefined) {
-      this.postOrderData.push(root.data);
-    }
-    console.log('Lets print this tree postOrder...', `${this.postOrderData}`);
-  }
-}
-let testInputArray = [1, 2, 3, 4, 5, 6, 7];
-balancedBST = new tree(testInputArray);
-balancedBST.insert(8);
-balancedBST.insert(9);
-balancedBST.delete(3);
-console.log(balancedBST.find(10));
-balancedBST.levelOrder();
-balancedBST.inOrder();
-balancedBST.preOrder();
-balancedBST.postOrder();
+// Step 8
+console.log('8) Print out all elements in level, pre, post, and in order');
+console.log(`Level: ${newTree.levelOrder(newTree.root)}`);
+console.log(`Preorder: ${newTree.preOrder(newTree.root)}`);
+console.log(`Postorder: ${newTree.postOrder(newTree.root)}`);
+console.log(`In order: ${newTree.inOrder(newTree.root)}`);
