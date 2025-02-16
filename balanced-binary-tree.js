@@ -5,10 +5,21 @@ class node {
     this.right = right;
   }
 }
-
+const prettyPrint = (node, prefix = '', isLeft = true) => {
+  if (node === null) {
+    return;
+  }
+  if (node.right !== null) {
+    prettyPrint(node.right, `${prefix}${isLeft ? '│   ' : '    '}`, false);
+  }
+  console.log(`${prefix}${isLeft ? '└── ' : '┌── '}${node.data}`);
+  if (node.left !== null) {
+    prettyPrint(node.left, `${prefix}${isLeft ? '    ' : '│   '}`, true);
+  }
+};
 class tree {
   constructor(inputArray) {
-    this.root = this.buildTree(this.inputArray, 0, this.inputArray.length - 1);
+    this.root = this.buildTree(inputArray, 0, inputArray.length - 1);
     prettyPrint(this.root);
   }
 
@@ -21,3 +32,5 @@ class tree {
     return root;
   }
 }
+let testInputArray = [1, 2, 3, 4, 5, 6, 7];
+balancedBST = new tree(testInputArray);
