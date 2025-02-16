@@ -31,6 +31,22 @@ class tree {
     root.right = this.buildTree(inputArray, mid + 1, end);
     return root;
   }
+
+  insert(value, root = this.root) {
+    if (root == null) {
+      return (root = new node(value));
+    }
+
+    if (root.data < value) {
+      root.right = this.insert(value, root.right);
+    } else {
+      root.left = this.insert(value, root.left);
+    }
+    prettyPrint(this.root);
+    return root;
+  }
 }
 let testInputArray = [1, 2, 3, 4, 5, 6, 7];
 balancedBST = new tree(testInputArray);
+balancedBST.insert(8);
+balancedBST.insert(9);
