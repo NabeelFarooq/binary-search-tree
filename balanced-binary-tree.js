@@ -17,6 +17,16 @@ const prettyPrint = (node, prefix = '', isLeft = true) => {
     prettyPrint(node.left, `${prefix}${isLeft ? '    ' : '│   '}`, true);
   }
 };
+
+function minValue(root) {
+    let min = root.data;
+    while (root != null) {
+        min = root.data;
+        root = root.left;
+    }
+    prettyPrint(this.root);
+    return min;
+};
 class tree {
   constructor(inputArray) {
     this.root = this.buildTree(inputArray, 0, inputArray.length - 1);
@@ -45,8 +55,30 @@ class tree {
     prettyPrint(this.root);
     return root;
   }
+  delete(value, root = this.root) {
+    if (root == null) {
+      return root;
+    }
+
+    if (root.data > value) {
+      root.left = this.delete(value, root.left);
+    } else if (root.data < value) {
+      root.right = this.delete(value, root.right);
+    } else {
+      if (root.left == null) {
+        return root.right;
+      } else if (root.right == null) {
+        return root.left;
+      }
+      root.data = minValue(root);
+      root.right = this.delete(root.right, root.data);
+    }
+    prettyPrint(this.root);
+    return root;
+  }
 }
 let testInputArray = [1, 2, 3, 4, 5, 6, 7];
 balancedBST = new tree(testInputArray);
 balancedBST.insert(8);
 balancedBST.insert(9);
+balancedBST.delete(3);
